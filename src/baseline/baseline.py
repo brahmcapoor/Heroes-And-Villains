@@ -62,7 +62,10 @@ class Baseline():
 				for movie in self.ids:
 					self.print_movie_answer(movie)
 			elif query != "":
-				self.print_movie_answer(query, by_name=True)
+				if query in self.ids:
+					self.print_movie_answer(query)
+				else:
+					self.print_movie_answer(query, by_name=True)
 			elif query == "":
 				return
 			else:
