@@ -26,12 +26,18 @@ def parse_existing_pairs(filename):
             m_ids_to_pa_pairs[tokens[0]] = (tokens[1], tokens[2])
     return m_ids_to_pa_pairs
 
+def parse_data_from_files():
+    m_ids_to_titles     = parse_title_data(DATASET_PATH + 'movie_titles_metadata.txt')
+    m_ids_to_characters = parse_character_data(DATASET_PATH + 'movie_characters_metadata.txt')
+    m_ids_to_pa_pairs   = parse_existing_pairs(DATASET_PATH + 'movie_pa_labels.txt')
+    return m_ids_to_titles, m_ids_to_characters, m_ids_to_pa_pairs
+
 def remove_previously_labeled(m_ids_to_titles, m_ids_to_pa_pairs):
     for m_id, title in m_ids_to_pa_pairs.items():
         del m_ids_to_titles[m_id]
 
 def print_prompt(m_title, c_list):
-    print ("-*- " * 10)
+    print ("~~~~ " * 10)
     print ("MOVIE: {} \nCHARACTERS:".format(m_title))
     for c_index, c_info in enumerate(c_list):
         c_id, c_name = c_info
@@ -75,10 +81,7 @@ def write_pair_to_file(protagonist, antagonist):
             print ("Skipped!")
 
 def main():
-    m_ids_to_titles     = parse_title_data(DATASET_PATH + 'movie_titles_metadata.txt')
-    m_ids_to_characters = parse_character_data(DATASET_PATH + 'movie_characters_metadata.txt')
-    m_ids_to_pa_pairs   = parse_existing_pairs(DATASET_PATH + 'movie_pa_labels.txt')
-
+    m_ids_to_titles, m_ids_to_characters, m_ids_to_pa_pairs = parse_data_from_files()
     remove_previously_labeled(m_ids_to_titles, m_ids_to_pa_pairs)
     for m_id, m_title in m_ids_to_titles.items():
         protagonist, antagonist = pa_pair_for_movie(m_id, m_title, m_ids_to_characters)
