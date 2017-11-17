@@ -1,5 +1,7 @@
 import collections
 
+DATASET_PATH = "../dataset/"
+
 def parse_title_data(filename):
     m_ids_to_titles = {}
     with open(filename, 'r', encoding='iso-8859-1') as f:
@@ -24,50 +26,63 @@ def parse_existing_pairs(filename):
             m_ids_to_pa_pairs[tokens[0]] = (tokens[1], tokens[2])
     return m_ids_to_pa_pairs
 
+def remove_previously_labeled(m_ids_to_titles, m_ids_to_pa_pairs):
+    for m_id, title in m_ids_to_pa_pairs.items():
+        del m_ids_to_titles[m_id]
+
+def print_prompt(m_title, c_list):
+    print ("-*- " * 10)
+    print ("MOVIE: {} \nCHARACTERS:".format(m_title))
+    for c_index, c_info in enumerate(c_list):
+        c_id, c_name = c_info
+        print ("  {}) {} [id:{}]".format(c_index, c_name, c_id))
+
+def get_character_choice(c_list, prompt):
+    while True:
+        try:
+            index = input(prompt)
+            index = int(index)
+        except ValueError:
+            print ("Invalid input (value error). Try again.")
+            continue
+        if index == -1:
+            return None
+        if index in range(len(c_list)):
+            return c_list[index]
+        print ("Invalid input (out of bounds). Try again.")
+
+def verify_input(protagonist, antagonist, m_title):
+    verify = input("VERIFY:\n  Protagonist: {}\n  Antagonist: {}\nPress ENTER if true; input any other character if false: ".format(
+        protagonist[1] if protagonist else 'UNKNOWN',
+        antagonist[1] if antagonist else 'UNKNOWN'))
+    return not verify
+
+def pa_pair_for_movie(m_id, m_title, m_ids_to_characters):
+    c_list = list(m_ids_to_characters[m_id])
+    print_prompt(m_title, c_list)
+    while True:
+        protagonist = get_character_choice(c_list, "Type the index of the protagonist (\'-1\' if unknown): ")
+        antagonist  = get_character_choice(c_list, "Type the index of the antagonist (\'-1\' if unknown): ")
+        if verify_input(protagonist, antagonist, m_title): return protagonist, antagonist
+
+def write_pair_to_file(protagonist, antagonist):
+    with open(DATASET_PATH + 'movie_pa_labels.txt', 'a'):
+        if protagonist and antagonist:
+            f.write(' +++$+++ '.join(m_id, protagonist[0], antagonist[0]))
+            f.flush()
+            print ("Added to file!")
+        else:
+            print ("Skipped!")
+
 def main():
-    m_ids_to_titles     = parse_title_data('movie_titles_metadata.txt')
-    m_ids_to_characters = parse_character_data('movie_characters_metadata.txt')
-    m_ids_to_pa_pairs   = parse_existing_pairs('movie_pa_labels.txt')
+    m_ids_to_titles     = parse_title_data(DATASET_PATH + 'movie_titles_metadata.txt')
+    m_ids_to_characters = parse_character_data(DATASET_PATH + 'movie_characters_metadata.txt')
+    m_ids_to_pa_pairs   = parse_existing_pairs(DATASET_PATH + 'movie_pa_labels.txt')
 
-    with open('movie_pa_labels.txt', 'a') as f:
-        for m_inf in m_ids_to_titles.items():
-            m_id, m_title = m_inf
-            if m_id in m_ids_to_pa_pairs: 
-                continue
-
-            for m_info in current_ms:
-                m_id, m_title = m_info
-                while True:
-                    print ("[{}/{}]For the movie \'{}\' ({}), with the following characters:".format(len(m_ids_to_pa_pairs), len(m_ids_to_titles), m_title, m_id))
-                    c_list = list(m_ids_to_characters[m_id])
-                    for c_index, c_info in enumerate(c_list):
-                        c_id, c_name = c_info
-                        print ("  {}) {} ({})".format(c_index, c_name, c_id))
-                    protagonist = input("Type the index of the protagonist (\'?\' if unkown): ")
-                    if protagonist != '?':
-                        protagonist = int(protagonist)
-                    antagonist  = input("Type the index of the antagonist (\'?\' if unkown): ")
-                    if antagonist != '?':
-                        antagonist = int(antagonist)
-                    verify = input("VERIFY: protagonist is {} and antagonist is {} (\'N\' if false): ".format(
-                        c_list[protagonist][1] if protagonist != '?' else protagonist, 
-                        c_list[antagonist][1]  if antagonist != '?' else antagonist))
-                    if verify != 'N':
-                        
-                        if protagonist != "?" or antagonist != "?":
-                            m_ids_to_pa_pairs[m_id] = (c_list[protagonist][0] if protagonist != '?' else -1, 
-                                                   c_list[antagonist][0] if antagonist != '?' else -1)
-                            f.write('{} +++$+++ {} +++$+++ {}\n'.format(
-                                m_id, 
-                                c_list[protagonist][0] if protagonist != '?' else -1, 
-                                c_list[antagonist][0] if antagonist != '?' else -1)
-                            )
-                            f.flush()
-                            print ("Added to file!")
-                        else:
-                            print ("Skipped!")
-                        print ("") 
-                        break
+    remove_previously_labeled(m_ids_to_titles, m_ids_to_pa_pairs)
+    for m_id, m_title in m_ids_to_titles.items():
+        protagonist, antagonist = pa_pair_for_movie(m_id, m_title, m_ids_to_characters)
+        write_pair_to_file(protagonist, antagonist)
 
 if __name__ == '__main__':
     main()
