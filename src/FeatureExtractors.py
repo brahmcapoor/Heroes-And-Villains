@@ -1,31 +1,60 @@
 from collections import defaultdict
 from constants import *
-# TODO Document
-class FeatureExtractor:
 
+class FeatureExtractor:
+	"""
+	Base class for all feature extractors. Exports methods to 
+	get all characters with a feature extractor as well as to 
+	retrieve the feature vector associated with a particular vector.
+
+	IMPORTANT: The base class also has an abstract method `extract_features` 
+	which MUST be overridden by subclasses representing specific extractors. 
+	The base class exists solely to provide `characters()` and the [] operator.
+	"""
 	def __init__(self, m_id, encoding):
+		"""
+		Feature vector maps character ids to feature vectors.
+		Feature vectors are sparse vectors represented by default dicts. 
+		"""
 		self.m_id = m_id
 		self.feature_vectors = defaultdict(lambda : defaultdict(int))
 		self.encoding = encoding
 
 	def extract_features(self):
+		"""
+		Abstract method. Must be overwritten in subclasses.
+		"""
 		raise NotImplementedError("extract_features method must be implemented in subclass")
 
-	def get_feature_vector(self, x_id):
-		return self.feature_vectors[x_id]
+	def characters(self):
+		"""
+		Returns characters which have feature vectors
+		"""
+		return self.feature_vectors.keys()
 
+	def __getitem__(self, key):
+		"""
+		Access the feature vector of a particular character
+		"""
+		return self.feature_vectors[key]
 
 class ProtagonistFeatureExtractor(FeatureExtractor):
+	"""
+	Feature extractor for protagonist identification
+	"""
 
 	def extract_features(self):
+		"""
+		Overrides base class method
+		"""
 		self.get_character_counts()
 		self.num_characters_talked_to()
 		self.character_metadata()
-
-		for k, v in self.feature_vectors.items():
-			print("{} : {}".format(k, dict(v)))
 			
 	def get_character_counts(self):
+		"""
+		Get character word counts and line counts
+		"""
 		with open(MOVIE_LINES_FILENAME, 'r', encoding=self.encoding) as f:
 			for line in f:
 				line = line.split(SEPARATOR)
@@ -35,6 +64,9 @@ class ProtagonistFeatureExtractor(FeatureExtractor):
 				self.feature_vectors[char_id]['word_count'] += len(dialog)
 
 	def num_characters_talked_to(self):
+		"""
+		Number of characters that the character has a conversation with
+		"""
 		chars_spoken_to = defaultdict(set)
 		with open(MOVIE_CONVERSATIONS_FILENAME, 'r', encoding=self.encoding) as f:
 			for line in f:
@@ -49,6 +81,10 @@ class ProtagonistFeatureExtractor(FeatureExtractor):
 			self.feature_vectors[char]['num_spoken_to'] = len(chars_spoken_to[char])
 
 	def character_metadata(self):
+
+		"""
+		Name in title, position in credits, gender
+		"""
 
 		def name_in_title(char_name, movie_name):
 			return any(token.lower() in movie_name.lower() for token in char_name.split())
