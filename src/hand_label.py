@@ -1,35 +1,33 @@
 import collections
 
-DATASET_PATH = "../dataset/"
-
 def parse_title_data(filename):
     m_ids_to_titles = {}
-    with open(filename, 'r', encoding='iso-8859-1') as f:
+    with open(filename, 'r', encoding=FILE_ENCODING) as f:
         for line in f:
-            tokens = line.split(' +++$+++ ')
+            tokens = line.split(' SEPARATOR ')
             m_ids_to_titles[tokens[0]] = tokens[1]
     return m_ids_to_titles
 
 def parse_character_data(filename):
     m_ids_to_characters = collections.defaultdict(set)
-    with open(filename, 'r', encoding='iso-8859-1') as f:
+    with open(filename, 'r', encoding=FILE_ENCODING) as f:
         for line in f:
-            tokens = line.split(' +++$+++ ')
+            tokens = line.split(' SEPARATOR ')
             m_ids_to_characters[tokens[2]].add((tokens[0], tokens[1]))
     return m_ids_to_characters
 
 def parse_existing_pairs(filename):
     m_ids_to_pa_pairs   = {}
-    with open(filename, 'r', encoding='iso-8859-1') as f:
+    with open(filename, 'r', encoding=FILE_ENCODING) as f:
         for line in f:
-            tokens = line.split(' +++$+++ ')
+            tokens = line.split(' SEPARATOR ')
             m_ids_to_pa_pairs[tokens[0]] = (tokens[1], tokens[2])
     return m_ids_to_pa_pairs
 
 def parse_data_from_files():
-    m_ids_to_titles     = parse_title_data(DATASET_PATH + 'movie_titles_metadata.txt')
-    m_ids_to_characters = parse_character_data(DATASET_PATH + 'movie_characters_metadata.txt')
-    m_ids_to_pa_pairs   = parse_existing_pairs(DATASET_PATH + 'movie_pa_labels.txt')
+    m_ids_to_titles     = parse_title_data(MOVIE_METADATA_FILENAME)
+    m_ids_to_characters = parse_character_data(MOVIE_CHARACTER_METADATA_FILENAME)
+    m_ids_to_pa_pairs   = parse_existing_pairs(LABELLED_DATA_FILENAME)
     return m_ids_to_titles, m_ids_to_characters, m_ids_to_pa_pairs
 
 def remove_previously_labeled(m_ids_to_titles, m_ids_to_pa_pairs):
@@ -72,7 +70,7 @@ def pa_pair_for_movie(m_id, m_title, m_ids_to_characters):
         if verify_input(protagonist, antagonist, m_title): return protagonist, antagonist
 
 def write_pair_to_file(protagonist, antagonist):
-    with open(DATASET_PATH + 'movie_pa_labels.txt', 'a'):
+    with open(LABELLED_DATA_FILENAME, 'a'):
         if protagonist and antagonist:
             f.write(' +++$+++ '.join(m_id, protagonist[0], antagonist[0]))
             f.flush()
