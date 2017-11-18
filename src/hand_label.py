@@ -26,7 +26,7 @@ def parse_existing_pairs(filename):
 
 def parse_data_from_files():
     m_ids_to_titles     = parse_title_data(MOVIE_METADATA_FILENAME)
-    m_ids_to_characters = parse_character_data(MOVIE_CHARACTER_METADATA_FILENAME)
+    m_ids_to_characters = parse_character_data(CHARACTER_METADATA_FILENAME)
     m_ids_to_pa_pairs   = parse_existing_pairs(LABELLED_DATA_FILENAME)
     return m_ids_to_titles, m_ids_to_characters, m_ids_to_pa_pairs
 

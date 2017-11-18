@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
 	baseline = Baseline(movie_ids_file = MOVIE_METADATA_FILENAME, 
 						movie_lines_file = MOVIE_LINES_FILENAME,
-						character_file = MOVIE_CHARACTER_METADATA_FILENAME, 
+						character_file = CHARACTER_METADATA_FILENAME, 
 						file_encoding = FILE_ENCODING,
 						separator = SEPARATOR)
 

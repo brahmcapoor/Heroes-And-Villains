@@ -1,14 +1,16 @@
 from constants import *
-from FeatureExtractors import ProtagonistFeatureExtractor
+from FeatureExtractors import ProtagonistFeatureExtractor, AntagonistFeatureExtractor
 
 """
 Currently just an example of how to use FeatureExtractors
 """
 
 def print_feature_vectors(movie_id):
-	extractor = ProtagonistFeatureExtractor(movie_id, FILE_ENCODING)
+	extractor = AntagonistFeatureExtractor(movie_id, FILE_ENCODING, 'u362')
 	extractor.extract_features()
 	for char in extractor.characters():
+		if 'num_mentioned' not in extractor[char]: 
+			continue
 		print("{}:{}".format(char, extractor[char]))
 
 if __name__ == "__main__":
