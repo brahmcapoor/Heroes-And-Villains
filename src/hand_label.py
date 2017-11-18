@@ -69,10 +69,13 @@ def pa_pair_for_movie(m_id, m_title, m_ids_to_characters):
         antagonist  = get_character_choice(c_list, "Type the index of the antagonist (\'-1\' if unknown): ")
         if verify_input(protagonist, antagonist, m_title): return protagonist, antagonist
 
-def write_pair_to_file(protagonist, antagonist):
-    with open(LABELLED_DATA_FILENAME, 'a'):
+
+def write_pair_to_file(m_id, protagonist, antagonist):
+    with open(DATASET_PATH + 'movie_pa_labels.txt', 'a') as f:
         if protagonist and antagonist:
-            f.write(' +++$+++ '.join(m_id, protagonist[0], antagonist[0]))
+            f.write(' +++$+++ '.join([m_id, protagonist[0], antagonist[0]]))
+            f.flush()
+            f.write('\n')
             f.flush()
             print ("Added to file!")
         else:
@@ -83,7 +86,7 @@ def main():
     remove_previously_labeled(m_ids_to_titles, m_ids_to_pa_pairs)
     for m_id, m_title in m_ids_to_titles.items():
         protagonist, antagonist = pa_pair_for_movie(m_id, m_title, m_ids_to_characters)
-        write_pair_to_file(protagonist, antagonist)
+        write_pair_to_file(m_id, protagonist, antagonist)
 
 if __name__ == '__main__':
     main()
