@@ -1,4 +1,5 @@
 import ast
+import numpy as np
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from collections import defaultdict
@@ -50,6 +51,8 @@ class ProtagonistFeatureExtractor(FeatureExtractor):
 		"""
 		Overrides base class method
 		"""
+		self.feature_names = ["line_count", "word_count", "num_spoken_to", "in_title", "credits_pos",
+							  "is_male", "is_female"]
 		self.get_character_counts()
 		self.num_characters_talked_to()
 		self.character_metadata()
@@ -122,9 +125,10 @@ class AntagonistFeatureExtractor(ProtagonistFeatureExtractor):
 
 	def extract_features(self):
 		super(AntagonistFeatureExtractor, self).extract_features()
+		self.feature_names += ["average_sentiment", "protagonist_sentiment"]
 		self.get_average_sentiment()
 		self.protagonist_sentiment()
-		self.num_mentioned()
+		# self.num_mentioned()
 
 	def get_average_sentiment(self):
 		sentiments = defaultdict(lambda : [0.0 , 0])
@@ -197,19 +201,13 @@ class AntagonistFeatureExtractor(ProtagonistFeatureExtractor):
 					if name_included(ids_to_names[char_id], dialog):
 						self.feature_vectors[char_id]['num_mentioned'] += 1
 
+def get_nparray(extractor, x_id):
 
+	try:
+		feature_names = extractor.feature_names
+	except (AttributeError):
+		raise AttributeError("You need to extract features first")
 
-
-"""
-ALGORITHM WRITE UP
-
-Protagonist feature vector: <line count, word count, number of people spoken to, is male, is female, position in credits, name occurs in title>
-
-Antagonist feature vector = protagonist feature vector plus:
-protagonist’s sentiment towards them (high level)
-Average sentiment of what they say (high level)
-Amount of interaction with protagonist
-Which scenes they occur in
-How often they’re talked about
-
-"""		
+	feature_vector = extractor[x_id]
+	array = [feature_vector[feature_name] for feature_name in feature_names]
+	return np.array(array, dtype=np.float32)
