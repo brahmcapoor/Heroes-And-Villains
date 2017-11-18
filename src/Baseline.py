@@ -1,16 +1,14 @@
 from collections import defaultdict
-
-SEPARATOR =  " +++$+++ "
-FILE_ENCODING =  "iso-8859-1"
-
-MOVIE_METADATA_FILENAME = "../../dataset/movie_titles_metadata.txt"
-MOVIE_LINES_FILENAME = "../../dataset/movie_lines.txt"
+from constants import *
 
 class Baseline():
 
-	def __init__(self, movie_ids_file, movie_lines_file, file_encoding):
+	def __init__(self, movie_ids_file, movie_lines_file, character_file, 
+				 file_encoding, separator):
 		self.encoding = file_encoding
+		self.separator = separator
 		self.get_movie_ids(movie_ids_file)
+		self.build_character_id_map(character_file)
 		self.get_line_frequencies(movie_lines_file)
 		self.find_protagonists_and_antagonists()
 
@@ -23,13 +21,23 @@ class Baseline():
 				movie_id, movie_name = line[0], line[1]
 				self.ids[movie_id] = movie_name
 
+	def build_character_id_map(self, filename):	
+
+		self.character_id_map = {}
+
+		with open(filename, 'r', encoding=self.encoding) as f:
+			for line in f:
+				data = line.split(self.separator)
+
+				character_id, character_name, movie_id = data[:3]
+				self.character_id_map[(character_name, movie_id)] = character_id
 
 	def get_line_frequencies(self, filename):
 		self.frequencies = defaultdict(lambda: defaultdict(int))
 
 		with open(filename, 'r', encoding=self.encoding) as f:
 			for line in f:
-				line = line.split(SEPARATOR)
+				line = line.split(self.separator)
 				movie_id, character = line[2], line[3]
 				self.frequencies[movie_id][character] += 1
 
@@ -50,14 +58,17 @@ class Baseline():
 
 			movie = self.movies_to_ids[movie]
 		
-		answer = self.answers[movie]
+		protagonist, antagonist = self.answers[movie]
+		protagonist_id = self.character_id_map[(protagonist, movie)]
+		antagonist_id = self.character_id_map[(antagonist, movie)]
 		movie_name = self.ids[movie]
-		print("In {}, the protagonist is {} and the antagonist is {}".format(
-			movie_name, answer[0], answer[1]))	
+
+		print("In {}, the protagonist is {}({}) and the antagonist is {}({})".format(
+			movie_name, protagonist,  protagonist_id, antagonist, antagonist_id))	
 
 	def simulate(self):
 		while True:
-			query = input("Type name of movie for specific answer, * for all movies and blank to quit: ")
+			query = input("Type name or ID of movie for specific answer, * for all movies and blank to quit: ")
 			if query == "*":
 				for movie in self.ids:
 					self.print_movie_answer(movie)
@@ -78,7 +89,9 @@ if __name__ == '__main__':
 	print("Running baseline")
 
 	baseline = Baseline(movie_ids_file = MOVIE_METADATA_FILENAME, 
-						movie_lines_file = MOVIE_LINES_FILENAME, 
-						file_encoding = FILE_ENCODING)
+						movie_lines_file = MOVIE_LINES_FILENAME,
+						character_file = CHARACTER_METADATA_FILENAME, 
+						file_encoding = FILE_ENCODING,
+						separator = SEPARATOR)
 
 	baseline.simulate()
