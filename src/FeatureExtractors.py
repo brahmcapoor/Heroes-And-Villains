@@ -189,9 +189,6 @@ class AntagonistFeatureExtractor(ProtagonistFeatureExtractor):
 					continue
 				ids_to_names[char_id] = name
 
-		print(ids_to_names)
-
-
 		with open(MOVIE_LINES_FILENAME, 'r', encoding=self.encoding) as f:
 			for line in f:
 				line = line.split(SEPARATOR)

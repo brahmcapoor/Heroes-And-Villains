@@ -9,8 +9,6 @@ def print_feature_vectors(movie_id):
 	extractor = AntagonistFeatureExtractor(movie_id, FILE_ENCODING, 'u362')
 	extractor.extract_features()
 	for char in extractor.characters():
-		if 'num_mentioned' not in extractor[char]: 
-			continue
 		print("{}:{}".format(char, extractor[char]))
 
 if __name__ == "__main__":
