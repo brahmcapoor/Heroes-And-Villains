@@ -1,10 +1,12 @@
 import collections
 
+from constants import *
+
 def parse_title_data(filename):
     m_ids_to_titles = {}
     with open(filename, 'r', encoding=FILE_ENCODING) as f:
         for line in f:
-            tokens = line.split(' SEPARATOR ')
+            tokens = line.split(SEPARATOR)
             m_ids_to_titles[tokens[0]] = tokens[1]
     return m_ids_to_titles
 
@@ -12,7 +14,7 @@ def parse_character_data(filename):
     m_ids_to_characters = collections.defaultdict(set)
     with open(filename, 'r', encoding=FILE_ENCODING) as f:
         for line in f:
-            tokens = line.split(' SEPARATOR ')
+            tokens = line.split(SEPARATOR)
             m_ids_to_characters[tokens[2]].add((tokens[0], tokens[1]))
     return m_ids_to_characters
 
@@ -20,7 +22,7 @@ def parse_existing_pairs(filename):
     m_ids_to_pa_pairs   = {}
     with open(filename, 'r', encoding=FILE_ENCODING) as f:
         for line in f:
-            tokens = line.split(' SEPARATOR ')
+            tokens = line.split(SEPARATOR)
             m_ids_to_pa_pairs[tokens[0]] = (tokens[1], tokens[2])
     return m_ids_to_pa_pairs
 
@@ -84,6 +86,7 @@ def write_pair_to_file(m_id, protagonist, antagonist):
 def main():
     m_ids_to_titles, m_ids_to_characters, m_ids_to_pa_pairs = parse_data_from_files()
     remove_previously_labeled(m_ids_to_titles, m_ids_to_pa_pairs)
+
     for m_id, m_title in m_ids_to_titles.items():
         protagonist, antagonist = pa_pair_for_movie(m_id, m_title, m_ids_to_characters)
         write_pair_to_file(m_id, protagonist, antagonist)
