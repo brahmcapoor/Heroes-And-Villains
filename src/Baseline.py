@@ -1,5 +1,6 @@
 from collections import defaultdict
 from constants import *
+import dill
 
 class Baseline():
 
@@ -21,6 +22,10 @@ class Baseline():
 				movie_id, movie_name = line[0], line[1]
 				self.ids[movie_id] = movie_name
 
+		with open('movieids_to_names.pkl', 'wb') as f:
+			dill.dump(self.ids, f)
+			f.close()
+
 	def build_character_id_map(self, filename):	
 
 		self.character_id_map = {}
@@ -31,6 +36,13 @@ class Baseline():
 
 				character_id, character_name, movie_id = data[:3]
 				self.character_id_map[(character_name, movie_id)] = character_id
+
+		charids_to_names = {(v,k[1]):k[0] for k,v in self.character_id_map.items()}
+		with open('charids_to_names.pkl', 'wb') as f:
+			dill.dump(charids_to_names, f)
+			f.close()
+
+
 
 	def get_line_frequencies(self, filename):
 		self.frequencies = defaultdict(lambda: defaultdict(int))

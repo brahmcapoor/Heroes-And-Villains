@@ -105,6 +105,10 @@ if __name__ == "__main__":
 	print("Protagonist train accuracy: {}".format(p_train_accuracy))
 	print("Protagonist test accuracy: {}".format(p_test_accuracy))
 
+	misclassified = np.where(p_test_y != protagonist_model.predict(p_test_x))
+
+	print([p_test_x[i] for i in misclassified])
+
 	protagonists = generate_protagonist_map(protagonist_model)
 
 	antagonist_X, antagonist_Y = generate_data_and_labels(False, protagonists)
