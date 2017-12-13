@@ -152,7 +152,7 @@ if __name__ == "__main__":
     ax.spines["left"].set_visible(True)
     plt.xlabel('K')
     plt.ylabel('Average Silhoette Score')
-    plt.title('K vs. Average Silhoette Score\nfor K-Means Clustering')
+    plt.title('K vs. Average Silhouette Score\nfor K-Means Clustering')
     plt.ylim(0, 0.4)
     plt.xlim(2, 13)
     count = 0
@@ -160,7 +160,6 @@ if __name__ == "__main__":
     for scores, segments in zip(all_scores, segment_nums):
         plt.plot(range(2,max_means+1), scores, c=tableau20[count])
         # plt.scatter(range(2,max_means), scores, c=tableau20[count])
-        plt.savefig('../plots/km_silhouette_summary.png')
         y_pos = scores[-1]
         if prev_y:
             if abs(prev_y - y_pos) < 0.005:
@@ -169,3 +168,4 @@ if __name__ == "__main__":
         plt.text(12.2, y_pos, "{} Segments".format(segments), color=tableau20[count])
         count += 1
         prev_y = y_pos
+    plt.savefig('../plots/km_silhouette_summary.png')   

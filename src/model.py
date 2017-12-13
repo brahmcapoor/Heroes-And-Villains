@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np 
 from constants import *
 from sklearn.cross_validation import train_test_split
 from sklearn.linear_model import LogisticRegression
