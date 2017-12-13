@@ -4,6 +4,10 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from collections import defaultdict
 from constants import *
+import dill
+import os
+
+
 
 class FeatureExtractor:
 	"""
@@ -20,8 +24,12 @@ class FeatureExtractor:
 		Feature vector maps character ids to feature vectors.
 		Feature vectors are sparse vectors represented by default dicts. 
 		"""
+
+		def dd():
+			return defaultdict(float)
+
 		self.m_id = m_id
-		self.feature_vectors = defaultdict(lambda : defaultdict(float))
+		self.feature_vectors = defaultdict(dd)
 		self.encoding = encoding
 
 	def extract_features(self):
@@ -118,10 +126,15 @@ class ProtagonistFeatureExtractor(FeatureExtractor):
 
 class AntagonistFeatureExtractor(ProtagonistFeatureExtractor):
 
+	def dictFormat(self): #pickle can't handle lambdas
+		return [0.0, 0]
+
 	def __init__(self, m_id, file_encoding, protagonist_id):
 		super(AntagonistFeatureExtractor, self).__init__(m_id, file_encoding)
 		self.analyzer = SentimentIntensityAnalyzer()
 		self.protagonist = protagonist_id
+		self.avg_sentiments = None
+		self.protag_sentiments = None
 
 	def extract_features(self):
 		super(AntagonistFeatureExtractor, self).extract_features()
@@ -131,7 +144,7 @@ class AntagonistFeatureExtractor(ProtagonistFeatureExtractor):
 		# self.num_mentioned()
 
 	def get_average_sentiment(self):
-		sentiments = defaultdict(lambda : [0.0 , 0])
+		sentiments = defaultdict(self.dictFormat)
 		with open(MOVIE_LINES_FILENAME, 'r', encoding=self.encoding) as f:
 			for line in f:
 				line = line.split(SEPARATOR)
@@ -145,9 +158,11 @@ class AntagonistFeatureExtractor(ProtagonistFeatureExtractor):
 		for char_id in sentiments:
 			self.feature_vectors[char_id]['average_sentiment'] = sentiments[char_id][0]/sentiments[char_id][1]
 
+		self.avg_sentiments = sentiments
+
 	def protagonist_sentiment(self):
 		line_sentiments = {}
-		with open(MOVIE_LINES_FILENAME, 'r', encoding = self.encoding) as f:
+		with open(MOVIE_LINES_FILENAME, 'r', encoding=self.encoding) as f:
 			for line in f:
 				line = line.split(SEPARATOR)
 				line_id, char_id, movie_id, dialog = line[0], line[1], line[2], line[4]
@@ -156,7 +171,7 @@ class AntagonistFeatureExtractor(ProtagonistFeatureExtractor):
 				if char_id == self.protagonist:
 					line_sentiments[line_id] = self.analyzer.polarity_scores(dialog)['compound']
 
-		protagonist_sentiments = defaultdict(lambda: [0.0 ,0])
+		protagonist_sentiments = defaultdict(self.dictFormat)
 
 		with open(MOVIE_CONVERSATIONS_FILENAME, 'r', encoding=self.encoding) as f:
 			for line in f:
@@ -178,6 +193,10 @@ class AntagonistFeatureExtractor(ProtagonistFeatureExtractor):
 
 		for char_id in protagonist_sentiments:
 			self.feature_vectors[char_id]['protagonist_sentiment'] = protagonist_sentiments[char_id][0]/protagonist_sentiments[char_id][1]
+
+		self.protag_sentiments = protagonist_sentiments
+
+
 
 	def num_mentioned(self):
 

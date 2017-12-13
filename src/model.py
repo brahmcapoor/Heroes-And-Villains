@@ -5,6 +5,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 import FeatureExtractors
 from FeatureExtractors import ProtagonistFeatureExtractor, AntagonistFeatureExtractor
+import dill
 
 """
 Currently just an example of how to use FeatureExtractors
@@ -17,25 +18,43 @@ def print_feature_vectors(movie_id):
 		print("{}:{}".format(char, FeatureExtractors.get_nparray(extractor, char)))
 
 def generate_data_and_labels(protagonist, protagonist_map=None):
+	print("GENERATING")
 	print("Generating data for {}...".format("protagonist" if protagonist else "antagonist"))
 	X = []
 	y = []
 
 	char_idx = 1 if protagonist else 2
 	with open(LABELLED_DATA_FILENAME, 'r', encoding=FILE_ENCODING) as dataset:
+		average_sentiments = {}
+		protag_sentiments = {}
 		for movie in dataset:
 			movie = movie.strip().split(SEPARATOR)
 			m_id, character = movie[0], movie[char_idx]
 			extractor = None
-			if character:
+			if protagonist:
 				extractor = ProtagonistFeatureExtractor(m_id, FILE_ENCODING)
 			else:
 				extractor = AntagonistFeatureExtractor(m_id, FILE_ENCODING, protagonist_map[m_id])
 			extractor.extract_features()
+			
+			if not protagonist:
+				average_sentiments[m_id] = extractor.avg_sentiments
+				protag_sentiments[m_id] = extractor.protag_sentiments
+
+			# add extractor.protagonist_sentiments to protag_sentiments
 			for char in extractor.characters():
 				feature_vector = FeatureExtractors.get_nparray(extractor, char)
 				X.append(feature_vector)
 				y.append(int(char == character))
+
+		if not protagonist:
+			with open('avg_sentiment.pkl', 'wb') as f:
+				dill.dump(average_sentiments, f)
+				f.close()
+
+			with open('protagonist_sentiment.pkl', 'wb') as f:
+				dill.dump(protag_sentiments, f)
+				f.close()
 
 	# print(any(x != 0 for x in y))
 	return np.array(X), np.array(y)
@@ -85,6 +104,10 @@ if __name__ == "__main__":
 
 	print("Protagonist train accuracy: {}".format(p_train_accuracy))
 	print("Protagonist test accuracy: {}".format(p_test_accuracy))
+
+	misclassified = np.where(p_test_y != protagonist_model.predict(p_test_x))
+
+	print([p_test_x[i] for i in misclassified])
 
 	protagonists = generate_protagonist_map(protagonist_model)
 
