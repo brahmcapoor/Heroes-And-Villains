@@ -78,7 +78,7 @@ def plot_som(k, som, sentiment_to_assign):
 	plt.axis([0, som.get_weights().shape[0], 0,  som.get_weights().shape[1]]) 
 	plt.xticks([], [])
 	plt.yticks([], [])
-	plt.savefig("/Users/brahm/Desktop/banter.png")
+	plt.savefig("SOM.png")
 
 
 def make_som(k, filter, n_segments):
@@ -93,17 +93,17 @@ def make_som(k, filter, n_segments):
 if __name__ == "__main__":
 	p = argparse.ArgumentParser(description='Generate SOM visualizations')
 
-	p.add_argument("-k", "--k", type=int, required=True)
+	p.add_argument("-k", "--k_means", type=int, required=True)
 	p.add_argument("-f", "--filter", type=str, 
 				   choices=['plain', 'savgol', 'slide'], 
 				   required=True)
 	p.add_argument("-s", "--n_segments", 
 				   type=int, 
-				   choices=[4, 8, 10, 12, 16, 20, 30, 40, 60, 120, 180, 240],
+				   choices=SEGMENT_SIZES,
 				   required=True)
 
 	args = p.parse_args()
 
-	make_som(k = args.k,
+	make_som(k = args.k_means,
 			 filter = args.filter,
 			 n_segments = args.n_segments)
