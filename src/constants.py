@@ -13,4 +13,7 @@ LINES_FILENAME = "{}/movie_lines.txt".format(DATASET_PATH)
 
 SENTIMENT_DIR_PATH = '../sentiments/{}_segments'
 SENTIMENT_OUTPUT_PATH = '../sentiments/{}_segments/{}_sentiments.txt'
-PLOT_DIR_PATH = '../plots/{}_segments/k_{}/filter_{}/'
+CLUSTER_DIR_PATH = '../plots/{}_segments/k_{}/filter_{}/'
+CLUSTER_OUTPUT_CENTROID_PATH = '../plots/{}_segments/k_{}/filter_{}/centroids.txt'
+CLUSTER_OUTPUT_ASSIGNMENT_PATH = '../plots/{}_segments/k_{}/filter_{}/assignments.txt'
+SEGMENT_SIZES = [4, 8, 10, 12, 16, 20, 30, 40, 60, 120, 240]
