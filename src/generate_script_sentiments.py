@@ -104,7 +104,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     for filter_type in args.filters:
         if filter_type not in ['plain', 'savgol', 'slide']:
-            print ("ERROR: invalid finter type \'{}\'".format(args.filter))
+            print ("ERROR: invalid filter type \'{}\'".format(args.filter))
             sys.exit(1)
 
     movie_lines = read_movie_lines()
