@@ -73,7 +73,7 @@ def pa_pair_for_movie(m_id, m_title, m_ids_to_characters):
 
 
 def write_pair_to_file(m_id, protagonist, antagonist):
-    with open(DATASET_PATH + 'movie_pa_labels.txt', 'a') as f:
+    with open(DATASET_PATH + '/movie_pa_labels.txt', 'a') as f:
         if protagonist and antagonist:
             f.write(' +++$+++ '.join([m_id, protagonist[0], antagonist[0]]))
             f.flush()
