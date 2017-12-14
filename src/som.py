@@ -28,7 +28,7 @@ def load_sentiment_data(filename):
 	return np.array(sentiment_data)			
 
 def train_som(k, sentiment_data):
-	som = MiniSom(k, k, sentiment_data.shape[1])
+	som = MiniSom(2*k, 2*k, sentiment_data.shape[1])
 	print("Training SOM...", end="\r")
 	som.train_random(sentiment_data, 100)
 	print("Training complete!")
@@ -47,7 +47,7 @@ def map_sentiment_to_assign(sentiments_file, assignments_file):
 
 
 def plot_som(k, som, sentiment_to_assign):
-	plt.figure(figsize=(80, 80))
+	plt.figure(figsize=(2*k, 2*k))
 
 	cm = plt.get_cmap('nipy_spectral')
 	colors = [ cm( float(i) / k) for i in range(k) ]
