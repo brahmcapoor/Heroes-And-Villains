@@ -31,13 +31,15 @@ ax.spines["left"].set_visible(False)
 
 def read_sentiment_files(n, filter_type):
     result = []
+    m_ids = []
     with open(SENTIMENT_OUTPUT_PATH.format(n, filter_type), 'r', encoding=FILE_ENCODING) as f:
         for line in f:
             tokens = line.split(SEPARATOR)
             sentiments = eval(tokens[1])
             result.append(sentiments[0:n])
+            m_ids.append(tokens[0])
 
-    return np.array(result)
+    return np.array(result), m_ids
 
 def cluster_storylines(k, data):
     kmeans = KMeans(n_clusters = k)
@@ -98,7 +100,7 @@ def silhouette_method(data, max_means, segments):
     # plt.savefig('../plots/km_silhouette_{}.png'.format(segments))
 
 def graph_results(data, assignments, centroids, n, filter_type):
-    path = PLOT_DIR_PATH.format(n, len(centroids), filter_type)
+    path = CLUSTER_DIR_PATH.format(n, len(centroids), filter_type)
     if not os.path.isdir(path):
         os.makedirs(path)
 
@@ -119,30 +121,48 @@ def graph_results(data, assignments, centroids, n, filter_type):
     for centroid in centroids:
         plt.xlabel('Segment of Screenplay')
         plt.ylabel('Average Dialogue Sentiment')
-        plt.title('Story Centroids for {}-Means'.format(n))
+        plt.title('Story Centroids for {}-Means'.format(len(centroids)))
         axes = plt.gca()
         axes.set_ylim([-1.5,1.5])
         plt.plot(centroid)
         plt.savefig(path + "centroids.png")
+
+def save_results(m_ids, assignments, centroids):
+    path = CLUSTER_DIR_PATH.format(n, len(centroids), filter_type)
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    with open(CLUSTER_OUTPUT_CENTROID_PATH.format(n, len(centroids), filter_type), 'w') as c:
+        for centroid in centroids:
+            c.write('{}\n'.format(list(centroid)))
+        c.flush()
+
+    with open(CLUSTER_OUTPUT_ASSIGNMENT_PATH.format(n, len(centroids), filter_type), 'w') as a:
+        for m_id, assignment in zip(m_ids, assignments):
+            a.write('{} {} {}\n'.format(m_id, SEPARATOR, assignment))
+        a.flush()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
 
     parser.add_argument('-m', '--movie_id', type=str, default='all')
     parser.add_argument('-k', '--k_means', type=int, nargs='+', default=[6])
-    parser.add_argument('-s', '--segment_nums', type=int, nargs='+', default=[4, 8, 10, 12, 16, 20, 30, 40, 60, 120, 180, 240])
+    parser.add_argument('-s', '--segment_nums', type=int, nargs='+', default=SEGMENT_SIZES)
     parser.add_argument('-f', '--filters', type=str, nargs='+', default=['plain', 'savgol', 'slide'])
 
     args = parser.parse_args()
     for filter_type in args.filters:
         if filter_type not in ['plain', 'savgol', 'slide']:
-            print ("ERROR: invalid finter type \'{}\'".format(args.filter))
+            print ("ERROR: invalid filter type \'{}\'".format(args.filter))
             sys.exit(1)
 
+    print ("Clustering on products of {}, {}, {}".format(args.k_means, args.segment_nums, args.filters))
     for k, n, filter_type in tqdm(list(itertools.product(args.k_means, args.segment_nums, args.filters))):
-        data = read_sentiment_files(n, filter_type)
+        data, m_ids = read_sentiment_files(n, filter_type)
         assignments, centroids, labels = cluster_storylines(k, data)
         graph_results(data, assignments, centroids, n, filter_type)
+        save_results(m_ids, assignments, centroids)
+
 
     # max_means = 12
     #

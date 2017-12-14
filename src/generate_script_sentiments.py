@@ -46,7 +46,7 @@ def sentimentalize_script(script_lines, n_segments, filters):
         savgol_sentiments = list(savgol_filter(plain_sentiments, window_sz, 1))
         sentiments['savgol'] = savgol_sentiments
     if 'slide' in filters:
-        window_sz = int(n_segments / 4)
+        window_sz = int(math.sqrt(n_segments)) + 1
         slide_sentiments = list(np.convolve(plain_sentiments, np.ones((window_sz,)) / window_sz, mode='same'))
         sentiments['slide'] = slide_sentiments
 
@@ -97,14 +97,13 @@ def output_to_file(result, n_segments, filters):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
 
-    parser.add_argument('-m', '--movie_id', type=str, default='all')
-    parser.add_argument('-s', '--segment_nums', type=int, nargs='+', default=[4, 8, 10, 12, 16, 20, 30, 40, 60, 120, 180, 240])
+    parser.add_argument('-s', '--segment_nums', type=int, nargs='+', default=SEGMENT_SIZES)
     parser.add_argument('-f', '--filters', type=str, nargs='+', default=['plain', 'savgol', 'slide'])
 
     args = parser.parse_args()
     for filter_type in args.filters:
         if filter_type not in ['plain', 'savgol', 'slide']:
-            print ("ERROR: invalid finter type \'{}\'".format(args.filter))
+            print ("ERROR: invalid filter type \'{}\'".format(args.filter))
             sys.exit(1)
 
     movie_lines = read_movie_lines()
