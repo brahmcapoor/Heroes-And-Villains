@@ -37,7 +37,7 @@ class Baseline():
 				character_id, character_name, movie_id = data[:3]
 				self.character_id_map[(character_name, movie_id)] = character_id
 
-		charids_to_names = {(v,k[1]):k[0] for k,v in self.character_id_map.items()}
+		charids_to_names = {v:k[0] for k,v in self.character_id_map.items()}
 		with open('charids_to_names.pkl', 'wb') as f:
 			dill.dump(charids_to_names, f)
 			f.close()
