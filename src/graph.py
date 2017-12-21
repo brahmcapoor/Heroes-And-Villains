@@ -9,36 +9,20 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import silhouette_samples, silhouette_score
 import matplotlib.cm as cm
 import collections
+import argparse
 
-
-
-
-
-def sentiment_clustering():
-	avg_sentiments = None
-	with open('avg_sentiment.pkl', 'rb') as f:
-		avg_sentiments = dill.load(f)
-		f.close()
-
-	protag_sentiments = None
-	with open('protagonist_sentiment.pkl', 'rb') as f:
-		protag_sentiments = dill.load(f)
-		f.close()
-
-	movieids_to_names = None
-	with open('movieids_to_names.pkl', 'rb') as f:
-		movieids_to_names = dill.load(f)
-		f.close()
-
-	charids_to_names = None
-	with open('charids_to_names.pkl', 'rb') as f:
-		charids_to_names = dill.load(f)
-		f.close()
+#Loads dicts and runs k_means on either individual/all movies
+def sentiment_clustering(k_clusters, plot_type):
+	avg_sentiments = load_from_pkl('avg_sentiment.pkl')
+	protag_sentiments = load_from_pkl('protagonist_sentiment.pkl')
+	movieids_to_names =  load_from_pkl('movieids_to_names.pkl')
+	charids_to_names = load_from_pkl('charids_to_names.pkl')
 
 	n_clusters_to_sil_score = collections.defaultdict(float)
 	sentiments_to_names = {}
 	numMovies = 0
 	all_char_sentiments = []
+
 	with open(LABELLED_DATA_FILENAME, 'r', encoding=FILE_ENCODING) as dataset:
 		for movie in dataset:
 			char_sentiments = []
@@ -57,25 +41,36 @@ def sentiment_clustering():
 
 			all_char_sentiments.extend(char_sentiments)
 			X = np.array(char_sentiments)
-			#run_kMeans_single_movie(X, sentiments_to_names, movieids_to_names[m_id])
 			scores = cluster_silhouette_scores(X, movieids_to_names[m_id])
-			#plot_individual_silhouette_scores(scores, movieids_to_names[m_id])
-			for i, score in enumerate(scores):
-				n_clusters_to_sil_score[i] += score
 
-	avg_scores = []
-	for k,v in n_clusters_to_sil_score.items():
-		n_clusters_to_sil_score[k] = v/numMovies #divide score by number of movies
-		avg_scores.append(n_clusters_to_sil_score[k])
+			if plot_type == 'ind':
+				run_kMeans_single_movie(k_clusters, X, sentiments_to_names, movieids_to_names[m_id])
+				plot_individual_silhouette_scores(scores, movieids_to_names[m_id])
 
-	X_all = np.array(all_char_sentiments)
-	run_kMeans_all_movies(X_all, sentiments_to_names)
+			else:
+				for i, score in enumerate(scores):
+					n_clusters_to_sil_score[i] += score
 
+	if plot_type == 'all':
+		avg_scores = []
+		for k,v in n_clusters_to_sil_score.items():
+			n_clusters_to_sil_score[k] = v/numMovies #divide score by number of movies
+			avg_scores.append(n_clusters_to_sil_score[k])
 
-	plot_overall_silhouette_scores(avg_scores)
+		X_all = np.array(all_char_sentiments)
 
-def run_kMeans_single_movie(X, sentiments_to_names, movie_name):
-	kmeans = KMeans(n_clusters=3).fit(X)
+		run_kMeans_all_movies(k_clusters, X_all, sentiments_to_names)
+		plot_overall_silhouette_scores(avg_scores)
+
+def load_from_pkl(filename):
+	pkld_obj = None
+	with open(filename, 'rb') as f:
+		pkld_obj = dill.load(f)
+		f.close()
+	return pkld_obj
+
+def run_kMeans_single_movie(k, X, sentiments_to_names, movie_name):
+	kmeans = KMeans(n_clusters=k).fit(X)
 	print(kmeans.cluster_centers_)
 
 	# Step size of the mesh. Decrease to increase the quality of the VQ.
@@ -101,31 +96,24 @@ def run_kMeans_single_movie(X, sentiments_to_names, movie_name):
 	plt.xlabel('Average Sentiment')
 	plt.ylabel('Protagonist Sentiment Towards')
 
-		#plt.plot(X[:, 0], X[:, 1], 'k.', markersize=1)
-	colors = ['k', 'g', 'r', 'c', 'w', 'y', 'b',]
+	colors = ['k', 'g', 'r', 'c', 'm', 'y', 'b',]
 	styles = ['D', 'o', 'v', '*', '+', '3', '4']
+
 	for i in range(len(X)):
 		cur_label = sentiments_to_names[(X[i,0], X[i,1])]
 		plt.plot(X[i,0], X[i,1], styles[i//7]+colors[i%7], markersize=5, label=cur_label)
-		#plt.annotate(i, xy = (X[i,0], X[i,1]), xytext = (0, 0), textcoords = 'offset points')
-	#for label in zip(labels):
 
-		#plt.annotate(label, (elem[0], elem[1]))
-	# Plot the centroids as a white X
 	plt.legend(bbox_to_anchor=(.96,1))
 	centroids = kmeans.cluster_centers_
-	#plt.scatter(centroids[:, 0], centroids[:, 1],
-							#marker='x', s=169, linewidths=3,
-							#color='w', zorder=10)
-	plt.title('3-Means Clustering on {}'.format(movie_name.title()))
+	plt.title('{}-Means Clustering on {}'.format(k, movie_name.title()))
 	plt.xlim(x_min, x_max)
 	plt.ylim(y_min, y_max)
 	plt.xticks(())
 	plt.yticks(())
 	plt.show()
 
-def run_kMeans_all_movies(X, sentiments_to_names):
-	kmeans = KMeans(n_clusters=4).fit(X)
+def run_kMeans_all_movies(k, X, sentiments_to_names):
+	kmeans = KMeans(n_clusters=k).fit(X)
 	print(kmeans.cluster_centers_)
 
 	# Step size of the mesh. Decrease to increase the quality of the VQ.
@@ -150,12 +138,7 @@ def run_kMeans_all_movies(X, sentiments_to_names):
 	plt.xlabel('Average Sentiment')
 	plt.ylabel('Protagonist Sentiment Towards')
 
-		#plt.plot(X[:, 0], X[:, 1], 'k.', markersize=1)
-	colors = ['k', 'g', 'r', 'c', 'm', 'y', 'b',]
-	styles = ['D', 'o', 'v', '*', '+', '3', '4']
 	for i in range(len(X)):
-		if i > 15:
-			break
 		cur_label = sentiments_to_names[(X[i,0], X[i,1])]
 		if kmeans.labels_[i] == 0:
 			plt.plot(X[i,0], X[i,1], 'ko', markersize=2, label=cur_label)
@@ -168,33 +151,17 @@ def run_kMeans_all_movies(X, sentiments_to_names):
 		else:
 			plt.plot(X[i,0], X[i,1], 'go', markersize=2, label=cur_label)
 
-		#plt.annotate(i, xplt.plot(X[i,0], X[i,1], 'ko', markersize=2, label=cur_label)y = (X[i,0], X[i,1]), xytext = (0, 0), textcoords = 'offset points')
-	#for label in zip(labels):
-	#with open('5means_labels.txt', 'w') as f:
-		#for i, label in enumerate(kmeans.labels_):
-			#name_label = str(sentiments_to_names[(X[i,0], X[i,1])]) + " " + str(label)
-			#f.write(name_label + '\n')
-			
-
-
-		#plt.annotate(label, (elem[0], elem[1]))
 	# Plot the centroids as a white X
-	plt.legend(bbox_to_anchor=(.97,1))
 	centroids = kmeans.cluster_centers_
 	plt.scatter(centroids[:, 0], centroids[:, 1],
 							marker='x', s=169, linewidths=3,
 							color='w', zorder=10)
-	plt.title('4-Means Clustering on All Characters')
+	plt.title('{}-Means Clustering on All Characters'.format(k))
 	plt.xlim(x_min, x_max)
 	plt.ylim(y_min, y_max)
 	plt.xticks(())
 	plt.yticks(())
 	plt.show()
-
-
-
-
-
 
 
 def cluster_silhouette_scores(X, movie_name):
@@ -244,8 +211,11 @@ def plot_individual_silhouette_scores(silhouette_scores, movie_name):
 
 	plt.show()
 			
-
-
 	
+if __name__ == "__main__":
+	p = argparse.ArgumentParser(description='Run K-Means on individual movies or all movies')
+	p.add_argument("-k", "--k_means", type=int, choices=[2, 3, 4, 5], required=True)
+	p.add_argument("-t", "--type", type=str, choices=['ind', 'all'], required=True)
 
-sentiment_clustering()
+	args = p.parse_args()
+	sentiment_clustering(args.k_means, args.type)
