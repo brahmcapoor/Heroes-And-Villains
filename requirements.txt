@@ -6,7 +6,7 @@ cycler==0.10.0
 idna==2.6
 matplotlib==2.1.0
 MiniSom==1.1.1
-nltk==3.2.5
+nltk==3.4.5
 numpy==1.13.3
 oauthlib==2.0.6
 pyparsing==2.2.0
